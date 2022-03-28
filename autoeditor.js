@@ -70,34 +70,40 @@ function load() {
   mp.osd_message(
     "auto-editor: Loaded " + content["chunks"].length + " segments"
   );
-  function reducer(agg, val) {
-    agg[val[0]] = {
-      to: val[1],
-      speed: val[2],
-    };
-    return agg;
-  }
-  var segments = content["chunks"].reduce(reducer, {});
+  var segments = content["chunks"]
+  if (segments.length < 1) return;
+  
   var in_silence = false;
   var restore_speed = 1.0;
+  
+  var current_segment = segments[0];
+  
   timeObserver = function (_name, time) {
-    if (mp.get_property_bool("seeking")) return;
 	var frame = mp.get_property_number("estimated-frame-number");
-    if (segments[frame] != null) {
-		if (segments[frame].speed === 99999) {
+	
+	if (frame >= current_segment[0] && frame <= current_segment[1]) {
+		if (current_segment[2] === 99999) {
 			if (in_silence === false){
 				in_silence = true;
 				restore_speed = mp.get_property_number("speed");
-				mp.set_property_number("speed", SILENCE_SPEED);
+				mp.set_property("speed", SILENCE_SPEED);
 			}
 		}
 		else {
 			if (in_silence){
 				in_silence = false;
-				mp.set_property_number("speed", restore_speed);
+				mp.set_property("speed", restore_speed);
 			}
 		}
-    }
+	}
+	else {
+		for (var i = 0; i < segments.length; i++) {
+			if (frame < segments[i][1]) {
+				current_segment = segments[i];
+				break;
+			}
+		}
+	}
   };
   mp.observe_property("time-pos", "number", timeObserver);
 }
