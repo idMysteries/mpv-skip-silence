@@ -1,9 +1,9 @@
 /* mpv integration with auto-editor (https://github.com/WyattBlue/auto-editor)
  *
  * Changelog:
+ * https://github.com/idMysteries/mpv-skip-silence/commits
  * == v3 (2022/03/28)
  * Made the script work with the new version of auto-editor
- * https://github.com/idMysteries/mpv-skip-silence/commits
  * == v2 (2022/02/01)
  * The script can now invoke auto-editor automatically with a keybind.
  *
