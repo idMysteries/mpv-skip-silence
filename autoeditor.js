@@ -35,84 +35,86 @@ var timeObserver;
 var cmdInProgress = false;
 
 function runAutoEditor() {
-  if (cmdInProgress) {
-    mp.osd_message("auto-editor: An analysis is already in progress");
-    return;
-  }
-  var file = mp.get_property("path");
-  var cmd = {
-    name: "subprocess",
-    playback_only: false,
-    args: [AUTO_EDITOR_BIN, file].concat(AUTO_EDITOR_ARGS)
-  };
-  mp.osd_message("auto-editor: Running analysis");
-  cmdInProgress = true;
-  mp.command_native_async(cmd, function (success, result, error) {
-    cmdInProgress = false;
-    if (success) {
-      load();
-    } else {
-      mp.osd_message(error);
-    }
-  });
+	if (cmdInProgress) {
+		mp.osd_message("auto-editor: An analysis is already in progress");
+		return;
+	}
+	var file = mp.get_property("path");
+	var cmd = {
+		name: "subprocess",
+		playback_only: false,
+		args: [AUTO_EDITOR_BIN, file].concat(AUTO_EDITOR_ARGS)
+	};
+	mp.osd_message("auto-editor: Running analysis");
+	cmdInProgress = true;
+	mp.command_native_async(cmd, function (success, result, error) {
+		cmdInProgress = false;
+		if (success) {
+			load();
+		} else {
+			mp.msg.error(error);
+		}
+	});
 }
 
 function load() {
-  unload(); // Unload previous callbacks
-  var file = mp.get_property("path");
-  file = file.replace(/\.[^.]+$/, ".json");
-  var content;
-  try {
-    content = JSON.parse(mp.utils.read_file(file));
-  } catch (e) {
-    return;
-  }
-  mp.osd_message(
-    "auto-editor: Loaded " + content["chunks"].length + " segments"
-  );
-  var segments = content["chunks"]
-  if (segments.length < 1) return;
+	unload(); // Unload previous callbacks
+	var file = mp.get_property("path");
+	file = file.replace(/\.[^.]+$/, ".json");
+	var content;
+	try {
+		content = JSON.parse(mp.utils.read_file(file));
+	} catch (e) {
+		return;
+	}
   
-  var in_silence = false;
-  var restore_speed = 1.0;
+	var segments = content["chunks"]
+	if (segments.length < 1) return;
   
-  var current_segment = segments[0];
+	mp.osd_message(
+		"auto-editor: Loaded " + segments.length + " segments"
+	);
   
-  timeObserver = function (_name, time) {
-	var frame = mp.get_property_number("estimated-frame-number");
+	var in_silence = false;
+	var restore_speed = 1.0;
+  
+	var current_segment = segments[0];
+  
+	timeObserver = function (_name, time) {
+		var frame = mp.get_property_number("estimated-frame-number");
 	
-	if (frame >= current_segment[0] && frame <= current_segment[1]) {
-		if (current_segment[2] === 99999) {
-			if (in_silence === false){
-				in_silence = true;
-				restore_speed = mp.get_property_number("speed");
-				mp.set_property("speed", SILENCE_SPEED);
+		if (frame >= current_segment[0] && frame < current_segment[1]) {
+			if (current_segment[2] === 99999) {
+				if (in_silence === false){
+					in_silence = true;
+					restore_speed = mp.get_property_number("speed");
+					mp.set_property("speed", SILENCE_SPEED);
+				}
+			}
+			else {
+				if (in_silence){
+					in_silence = false;
+					mp.set_property("speed", restore_speed);
+				}
 			}
 		}
 		else {
-			if (in_silence){
-				in_silence = false;
-				mp.set_property("speed", restore_speed);
+			for (var i = 0; i < segments.length; i++) {
+				if (frame < segments[i][1]) {
+					current_segment = segments[i];
+					break;
+				}
 			}
 		}
-	}
-	else {
-		for (var i = 0; i < segments.length; i++) {
-			if (frame < segments[i][1]) {
-				current_segment = segments[i];
-				break;
-			}
-		}
-	}
-  };
-  mp.observe_property("time-pos", "number", timeObserver);
+	};
+	mp.observe_property("time-pos", "number", timeObserver);
 }
 
 function unload() {
-  if (timeObserver != null) {
-    mp.unobserve_property(timeObserver);
-    timeObserver = null;
-  }
+	if (timeObserver != null) {
+		mp.unobserve_property(timeObserver);
+		timeObserver = null;
+	}
 }
 
 mp.register_event("start-file", load);
