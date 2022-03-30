@@ -27,7 +27,7 @@
  */
 
 var AUTO_EDITOR_BIN = "auto-editor";
-var AUTO_EDITOR_ARGS = ["--export_as_json", "-mcut", "100", "-t", "0.08"];
+var AUTO_EDITOR_ARGS = ["--export_as_json", "-mcut", "60", "-t", "0.05"];
 var SILENCE_SPEED = 2.5;
 
 var timeObserver;
