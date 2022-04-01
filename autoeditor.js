@@ -61,10 +61,15 @@ function runAutoEditor() {
 }
 
 function load() {
-	unload(); // Unload previous callbacks
+	if (timeObserver != null) {
+		mp.unobserve_property(timeObserver);
+		timeObserver = null;
+	}
+	
 	var file = mp.get_property("path");
 	file = file.replace(/\.[^.]+$/, ".json");
 	var content;
+	
 	try {
 		content = JSON.parse(mp.utils.read_file(file));
 	} catch (e) {
@@ -74,9 +79,7 @@ function load() {
 	var segments = content["chunks"]
 	if (segments.length < 1) return;
   
-	mp.osd_message(
-		"auto-editor: Loaded " + segments.length + " segments"
-	);
+	mp.osd_message("auto-editor: Loaded " + segments.length + " segments");
   
 	var current_segment = segments[0];
   
@@ -110,13 +113,5 @@ function load() {
 	mp.observe_property("time-pos", "number", timeObserver);
 }
 
-function unload() {
-	if (timeObserver != null) {
-		mp.unobserve_property(timeObserver);
-		timeObserver = null;
-	}
-}
-
 mp.register_event("start-file", load);
-mp.register_event("end-file", unload);
 mp.add_key_binding("E", "run-auto-editor", runAutoEditor);
