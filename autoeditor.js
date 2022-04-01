@@ -27,8 +27,11 @@
  */
 
 var AUTO_EDITOR_BIN = "auto-editor";
-var AUTO_EDITOR_ARGS = ["--export_as_json", "-mcut", "60", "-t", "0.05"];
-var SILENCE_SPEED = 2.5;
+var AUTO_EDITOR_ARGS = ["--export_as_json", "-mcut", "60", "-t", "0.04"];
+var SILENCE_SPEED = 3;
+
+var in_silence = false;
+var restore_speed = 1.0;
 
 var timeObserver;
 
@@ -74,9 +77,6 @@ function load() {
 	mp.osd_message(
 		"auto-editor: Loaded " + segments.length + " segments"
 	);
-  
-	var in_silence = false;
-	var restore_speed = 1.0;
   
 	var current_segment = segments[0];
   
