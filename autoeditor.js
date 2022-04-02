@@ -1,12 +1,8 @@
 /* mpv integration with auto-editor (https://github.com/WyattBlue/auto-editor)
  *
  * Changelog:
- * https://github.com/idMysteries/mpv-skip-silence/commits
- * == v3 (2022/03/28)
- * Made the script work with the new version of auto-editor
- * == v2 (2022/02/01)
- * The script can now invoke auto-editor automatically with a keybind.
- *
+ * https://github.com/idMysteries/mpv-skip-silence/commits/main/autoeditor.js
+ * 
  * Limitations:
  * 1. The video must have a constant frame-rate; variable frame rate sources,
  *    sources with frame skips will have issues.
@@ -27,7 +23,7 @@
  */
 
 var AUTO_EDITOR_BIN = "auto-editor";
-var AUTO_EDITOR_ARGS = ["--export_as_json", "-mcut", "60", "-t", "0.04"];
+var AUTO_EDITOR_ARGS = ["--export_as_json", "--quiet", "-mcut", "60", "-t", "0.04"];
 var SILENCE_SPEED = 3;
 
 var in_silence = false;
