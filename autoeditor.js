@@ -24,7 +24,7 @@
 
 var AUTO_EDITOR_BIN = "auto-editor";
 var AUTO_EDITOR_ARGS = ["--export_as_json", "--quiet", "-mcut", "60", "-t", "0.04"];
-var SILENCE_SPEED = 3;
+var SILENCE_SPEED = 2.5;
 
 var in_silence = false;
 var restore_speed = 1.0;
@@ -62,10 +62,11 @@ function load() {
 		timeObserver = null;
 	}
 	
-	var file = mp.get_property("path");
-	file = file.replace(/\.[^.]+$/, ".json");
-	var content;
+	mp.set_property("speed", restore_speed);
 	
+	var file = mp.get_property("path").replace(/\.[^.]+$/, ".json");
+
+	var content;
 	try {
 		content = JSON.parse(mp.utils.read_file(file));
 	} catch (e) {
