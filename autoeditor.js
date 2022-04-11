@@ -60,10 +60,9 @@ function load() {
 	if (timeObserver != null) {
 		mp.unobserve_property(timeObserver);
 		timeObserver = null;
+		mp.set_property("speed", restore_speed);
 	}
-	
-	mp.set_property("speed", restore_speed);
-	
+		
 	var file = mp.get_property("path").replace(/\.[^.]+$/, ".json");
 
 	var content;
