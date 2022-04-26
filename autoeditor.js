@@ -60,6 +60,7 @@ function load() {
 	if (timeObserver != null) {
 		mp.unobserve_property(timeObserver);
 		timeObserver = null;
+		in_silence = false;
 		mp.set_property("speed", restore_speed);
 	}
 		
