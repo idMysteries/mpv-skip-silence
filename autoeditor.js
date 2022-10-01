@@ -23,7 +23,7 @@
  */
 
 var AUTO_EDITOR_BIN = "auto-editor";
-var AUTO_EDITOR_ARGS = ["--export_as_json", "--quiet", "--frame-margin", "20,6", "-mcut", "60", "-t", "0.04"];
+var AUTO_EDITOR_ARGS = ["--export_as_json", "--quiet", "--frame-margin", "20,6", "-mcut", "60", "audio:threshold=4%"];
 var SILENCE_SPEED = 2.5;
 
 var in_silence = false;
