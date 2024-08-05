@@ -17,7 +17,6 @@ local config = {
 
 options.read_options(config, "autoeditor")
 
-local in_silence = false
 local time_observer = nil
 local cmd_in_progress = false
 
@@ -28,17 +27,14 @@ end
 
 local function process_segment(segment, frame)
     if frame >= segment[1] and frame < segment[2] then
-        local is_silence = segment[3] == 99999
-        if is_silence ~= in_silence then
-            in_silence = is_silence
-            
-            if is_silence then
-                local current_speed = mp.get_property_number("speed")
-                if current_speed < config.silence_speed then
-                    config.restore_speed = current_speed
-                end
+        local current_speed = mp.get_property_number("speed")
+        if segment[3] == 99999 then
+            if current_speed < config.silence_speed then
+                config.restore_speed = current_speed
                 update_playback_speed(config.silence_speed)
-            else
+            end
+        else
+            if current_speed == config.silence_speed then
                 update_playback_speed(config.restore_speed)
             end
         end
@@ -51,7 +47,6 @@ local function load_segments(json)
     if time_observer then
         mp.unobserve_property(time_observer)
         time_observer = nil
-        in_silence = false
         update_playback_speed(config.restore_speed)
     end
     
