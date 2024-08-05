@@ -1,4 +1,4 @@
-# MPV speed-up of silent video fragments
+# Automatic speed-up of silent video fragments for mpv player
 
 ## Usage guide
 1. Install [auto-editor](https://github.com/WyattBlue/auto-editor)
