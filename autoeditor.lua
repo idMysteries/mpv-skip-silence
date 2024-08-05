@@ -33,7 +33,7 @@ local function process_segment(segment, frame)
             in_silence = is_silence
             
             if is_silence then
-		local current_speed = mp.get_property_number("speed")
+                local current_speed = mp.get_property_number("speed")
                 if current_speed < config.silence_speed then
                     config.restore_speed = current_speed
                 end
