@@ -10,7 +10,7 @@ local config = {
     auto_run = false,
     restore_speed = 1.0,
     silence_speed = 2.5,
-    mincut = 60,
+    mincut = "60",
     threshold = 4,
     margin = "20,6",
 }
@@ -60,6 +60,7 @@ local function load_segments(json)
     if #segments < 1 then return end
     
     mp.osd_message("auto-editor: Loaded " .. #segments .. " segments")
+    msg.info("auto-editor: Loaded " .. #segments .. " segments")
     
     time_observer = function(_, time)
         local frame = mp.get_property_number("estimated-frame-number") or 0
@@ -76,6 +77,7 @@ end
 local function execute_auto_editor()
     if cmd_in_progress then
         mp.osd_message("auto-editor: An analysis is already in progress")
+        msg.info("auto-editor: An analysis is already in progress")
         return
     end
     
@@ -83,9 +85,10 @@ local function execute_auto_editor()
     local auto_editor_args = {
         "--export", "timeline:api=1",
         "--quiet",
+        "--no-cache",
         "--progress", "none",
         "--margin", config.margin,
-        "--edit", string.format("audio:mincut=%d,threshold=%d%%", config.mincut, config.threshold)
+        "--edit", string.format("audio:mincut=%s,threshold=%d%%", config.mincut, config.threshold)
     }
     
     local cmd = {
@@ -96,6 +99,7 @@ local function execute_auto_editor()
     }
     
     mp.osd_message("auto-editor: Running analysis")
+    msg.info("auto-editor: Running analysis")
     cmd_in_progress = true
     
     mp.command_native_async(cmd, function(success, result, error)
@@ -124,7 +128,7 @@ local function display_settings()
         "Auto-run: %s\n" ..
         "Restore speed: %.2f\n" ..
         "Silence speed: %.2f\n" ..
-        "Mincut: %d\n" ..
+        "Mincut: %s\n" ..
         "Threshold: %d%%\n" ..
         "Margin: %s",
         tostring(config.auto_run),
