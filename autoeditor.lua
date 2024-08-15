@@ -10,12 +10,11 @@ local config = {
     auto_run = false,
     restore_speed = 1.0,
     silence_speed = 2.5,
-    mincut = "60",
-    threshold = 4,
-    margin = "20,6",
+    threshold = "4%",
+    margin = "0.1s,0.2s",
 }
 
-options.read_options(config, "autoeditor")
+options.read_options(config)
 
 local time_observer = nil
 local cmd_in_progress = false
@@ -59,8 +58,8 @@ local function load_segments(json)
     local segments = parsed_content["chunks"]
     if #segments < 1 then return end
     
-    mp.osd_message("auto-editor: Loaded " .. #segments .. " segments")
-    msg.info("auto-editor: Loaded " .. #segments .. " segments")
+    mp.osd_message("Loaded " .. #segments .. " segments")
+    msg.info("Loaded " .. #segments .. " segments")
     
     time_observer = function(_, time)
         local frame = mp.get_property_number("estimated-frame-number") or 0
@@ -76,8 +75,8 @@ end
 
 local function execute_auto_editor()
     if cmd_in_progress then
-        mp.osd_message("auto-editor: An analysis is already in progress")
-        msg.info("auto-editor: An analysis is already in progress")
+        mp.osd_message("An analysis is already in progress")
+        msg.info("An analysis is already in progress")
         return
     end
     
@@ -88,7 +87,7 @@ local function execute_auto_editor()
         "--no-cache",
         "--progress", "none",
         "--margin", config.margin,
-        "--edit", string.format("audio:mincut=%s,threshold=%d%%", config.mincut, config.threshold)
+        "--edit", string.format("audio:threshold=%s", config.threshold)
     }
     
     local cmd = {
@@ -98,8 +97,8 @@ local function execute_auto_editor()
         args = {AUTO_EDITOR_BIN, file, table.unpack(auto_editor_args)}
     }
     
-    mp.osd_message("auto-editor: Running analysis")
-    msg.info("auto-editor: Running analysis")
+    mp.osd_message("Running analysis")
+    msg.info("Running analysis")
     cmd_in_progress = true
     
     mp.command_native_async(cmd, function(success, result, error)
@@ -107,15 +106,23 @@ local function execute_auto_editor()
         if success then
             load_segments(result.stdout)
 		else
-            msg.error("Auto-editor error: " .. (error or "Unknown error"))
-            mp.osd_message("Auto-editor failed: " .. (error or "Unknown error"))
+            msg.error("Error: " .. (error or "Unknown error"))
+            mp.osd_message("Error: " .. (error or "Unknown error"))
         end
     end)
 end
 
+local function is_local_file(file_path)
+    local file_info = utils.file_info(file_path)
+    return file_info ~= nil and file_info.is_file
+end
+
 local function auto_start_analysis()
-    if config.auto_run then
+    local file = mp.get_property("path")
+    if config.auto_run and file and is_local_file(file) then
         execute_auto_editor()
+    else
+        msg.info("Auto-run is disabled for network streams.")
     end
 end
 
@@ -128,13 +135,11 @@ local function display_settings()
         "Auto-run: %s\n" ..
         "Restore speed: %.2f\n" ..
         "Silence speed: %.2f\n" ..
-        "Mincut: %s\n" ..
-        "Threshold: %d%%\n" ..
+        "Threshold: %s\n" ..
         "Margin: %s",
         tostring(config.auto_run),
         config.restore_speed,
         config.silence_speed,
-        config.mincut,
         config.threshold,
         config.margin
     )
