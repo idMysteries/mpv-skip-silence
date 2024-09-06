@@ -24,22 +24,16 @@ local function update_playback_speed(speed)
     msg.info("Speed set to: " .. speed)
 end
 
-local function process_segment(segment, frame)
-    if frame >= segment[1] and frame < segment[2] then
-        local current_speed = mp.get_property_number("speed")
-        if segment[3] == 99999 then
-            if current_speed < config.silence_speed then
-                config.restore_speed = current_speed
-                update_playback_speed(config.silence_speed)
-            end
-        else
-            if current_speed == config.silence_speed then
-                update_playback_speed(config.restore_speed)
-            end
+local function process_segment(segment)
+    local current_speed = mp.get_property_number("speed")
+    if segment[3] == 99999 then
+        if current_speed < config.silence_speed then
+            config.restore_speed = current_speed
+            update_playback_speed(config.silence_speed)
         end
-        return true
+    else
+        update_playback_speed(config.restore_speed)
     end
-    return false
 end
 
 local function load_segments(json)
@@ -60,14 +54,25 @@ local function load_segments(json)
     
     mp.osd_message("Loaded " .. #segments .. " segments")
     msg.info("Loaded " .. #segments .. " segments")
+
+    local current_segment = nil
     
     time_observer = function(_, time)
         local frame = mp.get_property_number("estimated-frame-number") or 0
+
+        if current_segment and frame >= current_segment[1] and frame < current_segment[2] then
+            return
+        end
+
         for _, segment in ipairs(segments) do
-            if process_segment(segment, frame) then
-                break
+            if frame >= segment[1] and frame < segment[2] then
+                current_segment = segment
+                process_segment(segment)
+                return
             end
         end
+
+        current_segment = nil
     end
     
     mp.observe_property("time-pos", "number", time_observer)
