@@ -119,10 +119,12 @@ end
 
 local function auto_start_analysis()
     local file = mp.get_property("path")
-    if config.auto_run and file and is_local_file(file) then
-        execute_auto_editor()
-    else
-        msg.info("Auto-run is disabled for network streams.")
+    if config.auto_run then
+        if file and is_local_file(file) then
+            execute_auto_editor()
+        else
+            msg.info("Auto-run is disabled for network streams.")
+        end
     end
 end
 
