@@ -7,7 +7,7 @@ local options = require "mp.options"
 local AUTO_EDITOR_BIN = "auto-editor"
 
 local config = {
-    auto_run = false,
+    enabled = false,
     restore_speed = 1.0,
     silence_speed = 2.5,
     threshold = "4%",
@@ -119,11 +119,11 @@ end
 
 local function auto_start_analysis()
     local file = mp.get_property("path")
-    if config.auto_run then
+    if config.enabled then
         if file and is_local_file(file) then
             execute_auto_editor()
         else
-            msg.info("Auto-run is disabled for network streams.")
+            msg.info("Disabled for network streams")
         end
     end
 end
@@ -139,7 +139,7 @@ local function display_settings()
         "Silence speed: %.2f\n" ..
         "Threshold: %s\n" ..
         "Margin: %s",
-        tostring(config.auto_run),
+        tostring(config.enabled),
         config.restore_speed,
         config.silence_speed,
         config.threshold,
