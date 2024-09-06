@@ -9,3 +9,12 @@ pip install auto-editor
 3. Take a look at "[script-opts\autoeditor.conf](https://github.com/idMysteries/mpv-yt-dlp-files/blob/main/script-opts/autoeditor.conf)" as an example for script parameters. The default settings are in the script.
 4. Press Shift+E in the player and you will see a message about the running analysis
 5. Press Ctrl+Shift+E in the player and you will see the current settings
+
+## script-opts
+```
+enabled=no
+restore_speed=1.0
+silence_speed=2.5
+threshold="4%"
+margin="0.1s,0.2s"
+```
