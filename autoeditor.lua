@@ -81,13 +81,15 @@ local function execute_auto_editor()
     end
     
     local file = mp.get_property("path")
+    local audio_stream_index = mp.get_property_number("aid") or 1
+
     local auto_editor_args = {
         "--export", "timeline:api=1",
         "--quiet",
         "--no-cache",
         "--progress", "none",
         "--margin", config.margin,
-        "--edit", string.format("audio:threshold=%s", config.threshold)
+        "--edit", string.format("audio:stream=%d,threshold=%s", audio_stream_index - 1, config.threshold)
     }
     
     local cmd = {
@@ -105,7 +107,7 @@ local function execute_auto_editor()
         cmd_in_progress = false
         if success then
             load_segments(result.stdout)
-		else
+        else
             msg.error("Error: " .. (error or "Unknown error"))
             mp.osd_message("Error: " .. (error or "Unknown error"))
         end
