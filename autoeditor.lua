@@ -129,9 +129,8 @@ local function execute_auto_editor()
 end
 
 local function auto_start_analysis()
-    local file = mp.get_property("path")
     if config.enabled then
-        if is_local_file(file) then
+        if is_local_file(mp.get_property("path")) then
             execute_auto_editor()
         else
             mp.osd_message("auto-editor: disabled for network streams")
