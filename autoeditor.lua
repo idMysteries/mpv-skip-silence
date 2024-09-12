@@ -24,6 +24,12 @@ local function update_playback_speed(speed)
     msg.info("Speed set to: " .. speed)
 end
 
+local function is_local_file(file_path)
+    if not file_path then return false end
+    local file_info = utils.file_info(file_path)
+    return file_info ~= nil and file_info.is_file
+end
+
 local function load_segments(json)
     if time_observer then
         mp.unobserve_property(time_observer)
@@ -82,6 +88,13 @@ local function execute_auto_editor()
     end
     
     local file = mp.get_property("path")
+
+    if not is_local_file(file) then
+        mp.osd_message("auto-editor: disabled for network streams")
+        msg.info("Disabled for network streams")
+        return
+    end
+
     local audio_stream_index = mp.get_property_number("aid") or 1
 
     local auto_editor_args = {
@@ -90,7 +103,7 @@ local function execute_auto_editor()
         "--no-cache",
         "--progress", "none",
         "--margin", config.margin,
-        "--edit", string.format("audio:stream=%d,threshold=%s", audio_stream_index - 1, config.threshold)
+        "--edit", string.format("audio:stream=%d,threshold=%s,mincut=%d", audio_stream_index - 1, config.threshold, math.ceil(mp.get_property_number("container-fps", 20)))
     }
     
     local cmd = {
@@ -115,17 +128,13 @@ local function execute_auto_editor()
     end)
 end
 
-local function is_local_file(file_path)
-    local file_info = utils.file_info(file_path)
-    return file_info ~= nil and file_info.is_file
-end
-
 local function auto_start_analysis()
     local file = mp.get_property("path")
     if config.enabled then
-        if file and is_local_file(file) then
+        if is_local_file(file) then
             execute_auto_editor()
         else
+            mp.osd_message("auto-editor: disabled for network streams")
             msg.info("Disabled for network streams")
         end
     end
