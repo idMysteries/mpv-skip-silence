@@ -1,4 +1,4 @@
--- mpv integration with auto-editor (https://github.com/WyattBlue/auto-editor)
+-- MPV integration with auto-editor (https://github.com/WyattBlue/auto-editor)
 
 local utils = require "mp.utils"
 local msg = require "mp.msg"
@@ -13,7 +13,6 @@ local config = {
     threshold = "4%",
     margin = "0.1s,0.2s",
 }
-
 options.read_options(config)
 
 local time_observer = nil
@@ -25,7 +24,9 @@ local function update_playback_speed(speed)
 end
 
 local function is_local_file(file_path)
-    if not file_path then return false end
+    if not file_path then
+        return false
+    end
     local file_info = utils.file_info(file_path)
     return file_info ~= nil and file_info.is_file
 end
@@ -36,28 +37,28 @@ local function load_segments(json)
         time_observer = nil
         update_playback_speed(config.restore_speed)
     end
-    
+
     local parsed_content = utils.parse_json(json)
     if not parsed_content then
-        msg.error("Failed to parse JSON: " .. json)
+        msg.error("Failed to parse JSON.")
         return
     end
-    
+
     local segments = parsed_content["chunks"]
-    if #segments < 1 then return end
-    
+    if not segments or #segments < 1 then
+        msg.warn("No segments found.")
+        return
+    end
+
     mp.osd_message("Loaded " .. #segments .. " segments")
     msg.info("Loaded " .. #segments .. " segments")
 
     local current_segment = nil
-    
     time_observer = function(_, time)
         local frame = mp.get_property_number("estimated-frame-number") or 0
-
         if current_segment and frame >= current_segment[1] and frame < current_segment[2] then
             return
         end
-
         for _, segment in ipairs(segments) do
             if frame >= segment[1] and frame < segment[2] then
                 current_segment = segment
@@ -73,57 +74,59 @@ local function load_segments(json)
                 return
             end
         end
-
         current_segment = nil
     end
-    
+
     mp.observe_property("time-pos", "number", time_observer)
 end
 
 local function execute_auto_editor()
     if cmd_in_progress then
-        mp.osd_message("An analysis is already in progress")
-        msg.info("An analysis is already in progress")
+        mp.osd_message("Analysis is already in progress")
+        msg.info("Analysis is already in progress")
         return
     end
-    
-    local file = mp.get_property("path")
 
+    local file = mp.get_property("path")
     if not is_local_file(file) then
         mp.osd_message("auto-editor: disabled for network streams")
         msg.info("Disabled for network streams")
         return
     end
 
-    local audio_stream_index = mp.get_property_number("aid") or 1
+    local audio_stream_index = (mp.get_property_number("aid") or 1) - 1
+    local container_fps = mp.get_property_number("container-fps", 20)
+    local mincut = math.ceil(container_fps)
 
     local auto_editor_args = {
+        file,
         "--export", "timeline:api=1",
         "--quiet",
         "--no-cache",
         "--progress", "none",
         "--margin", config.margin,
-        "--edit", string.format("audio:stream=%d,threshold=%s,mincut=%d", audio_stream_index - 1, config.threshold, math.ceil(mp.get_property_number("container-fps", 20)))
+        "--edit", string.format("audio:stream=%d,threshold=%s,mincut=%d", audio_stream_index, config.threshold, mincut)
     }
-    
+
     local cmd = {
         name = "subprocess",
         playback_only = false,
         capture_stdout = true,
-        args = {AUTO_EDITOR_BIN, file, table.unpack(auto_editor_args)}
+        args = {AUTO_EDITOR_BIN, unpack(auto_editor_args)}
     }
-    
+
     mp.osd_message("Running analysis")
     msg.info("Running analysis")
     cmd_in_progress = true
-    
+
     mp.command_native_async(cmd, function(success, result, error)
         cmd_in_progress = false
         if success then
             load_segments(result.stdout)
         else
-            msg.error("Error: " .. (error or "Unknown error"))
-            mp.osd_message("Error: " .. (error or "Unknown error"))
+            local err_msg = error or "Unknown error"
+            msg.error("Error: " .. err_msg)
+            mp.osd_message("Error: " .. err_msg)
         end
     end)
 end
@@ -138,9 +141,6 @@ local function auto_start_analysis()
         end
     end
 end
-
-mp.add_key_binding("E", "run-auto-editor", execute_auto_editor)
-mp.register_event("file-loaded", auto_start_analysis)
 
 local function display_settings()
     local settings_str = string.format(
@@ -160,4 +160,6 @@ local function display_settings()
     msg.info(settings_str)
 end
 
+mp.add_key_binding("E", "run-auto-editor", execute_auto_editor)
 mp.add_key_binding("Ctrl+E", "print-auto-editor-settings", display_settings)
+mp.register_event("file-loaded", auto_start_analysis)
