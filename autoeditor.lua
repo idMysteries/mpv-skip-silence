@@ -12,6 +12,7 @@ local config = {
     silence_speed = 2.5,
     threshold = "4%",
     margin = "0.1s,0.2s",
+    mincut = "1s",
 }
 options.read_options(config)
 
@@ -95,8 +96,6 @@ local function execute_auto_editor()
     end
 
     local audio_stream_index = (mp.get_property_number("aid") or 1) - 1
-    local container_fps = mp.get_property_number("container-fps", 20)
-    local mincut = math.ceil(container_fps)
 
     local auto_editor_args = {
         file,
@@ -105,7 +104,7 @@ local function execute_auto_editor()
         "--no-cache",
         "--progress", "none",
         "--margin", config.margin,
-        "--edit", string.format("audio:stream=%d,threshold=%s,mincut=%d", audio_stream_index, config.threshold, mincut)
+        "--edit", string.format("audio:stream=%d,threshold=%s,mincut=%s", audio_stream_index, config.threshold, config.mincut)
     }
 
     local cmd = {
