@@ -8,7 +8,6 @@ local AUTO_EDITOR_BIN = "auto-editor"
 
 local config = {
     enabled = false,
-    restore_speed = 1.0,
     silence_speed = 2.5,
     threshold = "4%",
     margin = "0.1s,0.2s",
@@ -18,6 +17,7 @@ options.read_options(config)
 
 local time_observer = nil
 local cmd_in_progress = false
+local restore_speed = 1.0
 
 local function update_playback_speed(speed)
     mp.set_property("speed", speed)
@@ -36,7 +36,7 @@ local function load_segments(json)
     if time_observer then
         mp.unobserve_property(time_observer)
         time_observer = nil
-        update_playback_speed(config.restore_speed)
+        update_playback_speed(restore_speed)
     end
 
     local parsed_content = utils.parse_json(json)
@@ -66,11 +66,11 @@ local function load_segments(json)
                 if segment[3] == 99999 then
                     local current_speed = mp.get_property_number("speed")
                     if current_speed < config.silence_speed then
-                        config.restore_speed = current_speed
+                        restore_speed = current_speed
                         update_playback_speed(config.silence_speed)
                     end
                 else
-                    update_playback_speed(config.restore_speed)
+                    update_playback_speed(restore_speed)
                 end
                 return
             end
@@ -150,7 +150,7 @@ local function display_settings()
         "Threshold: %s\n" ..
         "Margin: %s",
         tostring(config.enabled),
-        config.restore_speed,
+        restore_speed,
         config.silence_speed,
         config.threshold,
         config.margin
