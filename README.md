@@ -13,7 +13,6 @@ pip install auto-editor
 ## script-opts
 ```
 enabled=no
-restore_speed=1.0
 silence_speed=2.5
 threshold="4%"
 margin="0.1s,0.2s"
